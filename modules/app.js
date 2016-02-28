@@ -29,13 +29,13 @@ app.use(express.static('public'))
 
 //configure logger
 var logPath = 'logs'
-fs.stat(logPath, function (err, stats) {
-  if(err) {
-    fs.mkdir(logPath, '0755')
-  }
-  var accessLogStream = fs.createWriteStream(path.join(logPath, 'access.log'), {flags: 'a'})
-  app.use(logger('tiny', {stream: accessLogStream}))
-})
+try {
+  fs.statSync(logPath)
+} catch (err) {
+  fs.mkdir(logPath, '0755')
+}
+var accessLogStream = fs.createWriteStream(path.join(logPath, 'access.log'), {flags: 'a'})
+app.use(logger('tiny', {stream: accessLogStream}))
 
 //setup db connection
 var connectionString = config.get('db.url') + config.get('db.dbName')

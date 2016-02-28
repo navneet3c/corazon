@@ -1,7 +1,9 @@
 /*
  * Error handlers
  */
- 
+
+'use strict'
+
 //catch 404 and forward to error handler
 module.exports.defaultHandler = function(req, res, next) {
   var err = new Error('Not Found')
