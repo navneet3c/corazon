@@ -1,13 +1,14 @@
 {
-  "global": {
-    "db": {
-      "url": "mongodb://localhost/",
-      "dbName": "corazon"
-    },
-    "server": {
-      "host": "localhost",
-      "port": 3000
-    }
+  "db": {
+    "url": "mongodb://localhost/",
+    "dbName": "corazon"
+  },
+  "server": {
+    "host": "localhost",
+    "port": 3000
+  },
+  "session": {
+    "secret": "b4138d6c5fb81cae2cc40f4c050c4856"
   },
   "app_name": "Corazon"
 }

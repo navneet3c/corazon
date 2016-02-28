@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 
-'use strict';
+'use strict'
 
-var config = require('config')
-var debug = require('modules/debug').print
-var http = require('http')
-var app = require('modules/app')
+const config = require('config')
+const debug = require('modules/debug').print
+const http = require('http')
+const app = require('modules/app')
 
 //set global variables
 global.app_name = config.get('app_name')
 
 //Get port and ip from config and store in Express.
-var port = config.get('global.server.port')
-var host = config.get('global.server.host')
+var port = config.get('server.port')
+var host = config.get('server.host')
 app.set('port', port)
 app.set('hostname', host)
 

@@ -1,10 +1,18 @@
-var express = require('express')
-var path = require('path')
-var favicon = require('serve-favicon')
-var fs = require('fs')
-var logger = require('morgan')
-var cookieParser = require('cookie-parser')
-var bodyParser = require('body-parser')
+'use strict'
+
+const express = require('express')
+const session = require('express-session')
+const path = require('path')
+const favicon = require('serve-favicon')
+const fs = require('fs')
+const logger = require('morgan')
+const cookieParser = require('cookie-parser')
+const bodyParser = require('body-parser')
+const mongoose = require('mongoose')
+const config = require('config')
+const debug = require('modules/debug').print
+const MongoStore = require('connect-mongo')(session)
+const errorHandlers = require('modules/errorHandler')
 
 var app = express()
 
@@ -23,50 +31,34 @@ app.use(express.static('public'))
 var logPath = 'logs'
 fs.stat(logPath, function (err, stats) {
   if(err) {
-    fs.mkdir(logPath, 0755)
+    fs.mkdir(logPath, '0755')
   }
   var accessLogStream = fs.createWriteStream(path.join(logPath, 'access.log'), {flags: 'a'})
   app.use(logger('tiny', {stream: accessLogStream}))
 })
 
+//setup db connection
+var connectionString = config.get('db.url') + config.get('db.dbName')
+const connection = mongoose.createConnection(connectionString)
+
+//setup session
+app.use(session({
+    secret: config.get('session.secret'),
+    resave: false,
+    saveUninitialized: true,
+    store: new MongoStore({ mongooseConnection: connection }),
+    cookie: {
+      maxAge: 60000
+    }
+}))
+
 //configure routes
-//var routes = require('./routes/index')
-//var users = require('./routes/users')
+var routes = require('routes/index')
 
-//app.use('/', routes)
-//app.use('/users', users)
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found')
-  err.status = 404
-  next(err)
-})
+app.use('/', routes)
 
 // error handlers
-
-// development error handler
-// will print stacktrace
-if (app.get('env') === 'development') {
-  app.use(function(err, req, res, next) {
-    res.status(err.status || 500)
-    res.render('error', {
-      title: global.app_name,
-      message: err.status + ": " + err.message,
-      error: err
-    })
-  })
-}
-
-// production error handler
-// no stacktraces leaked to user
-app.use(function(err, req, res, next) {
-  res.status(err.status || 500)
-  res.render('error', {
-    title: global.app_name,
-    message: err.status + ": " + err.message,
-    error: {}
-  })
-})
+app.use(errorHandlers.defaultHandler)
+app.use(errorHandlers.errorHandler)
 
 module.exports = app

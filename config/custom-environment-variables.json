@@ -1,12 +1,10 @@
 {
-  "global": {
-    "db": {
-      "url": "OPENSHIFT_MONGODB_DB_URL"
-    },
-    "server": {
-      "host": "OPENSHIFT_NODEJS_IP",
-      "port": "OPENSHIFT_NODEJS_PORT"
-    }
+  "db": {
+    "url": "OPENSHIFT_MONGODB_DB_URL"
+  },
+  "server": {
+    "host": "OPENSHIFT_NODEJS_IP",
+    "port": "OPENSHIFT_NODEJS_PORT"
   }
 }
 
