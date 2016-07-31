@@ -1,0 +1,4 @@
+Next:
+- play only range
+- save volume
+- order of items

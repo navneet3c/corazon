@@ -1,0 +1,67 @@
+<html>
+<head>
+  <title>Corazon</title>
+  <link rel="stylesheet" href="player.css"/>
+  <script type="text/javascript" src="jquery.min.js"></script>
+  <script type="text/javascript" src="underscore-min.js"></script>
+  <script type="text/javascript" src="backbone-min.js"></script>
+  <script type="text/javascript" src="youtube.js"></script>
+  <script type="text/javascript" src="frontend.js"></script>
+  <script type="text/javascript" src="player.js"></script>
+</head>
+<body>
+<header>
+  <h1 id="siteControlHeader">Corazon</h1>
+  <hr />
+</header>
+
+<section id="main">
+  <ul id="songs-list">
+    <li>
+    </li>
+  </ul>
+</section>
+
+<footer>
+  <hr />
+  YouTube Audio Player
+</footer>
+
+<div id="notification-wrapper">
+</div>
+
+<!-- templates -->
+<script type="text/template" id="notification-template">
+  <div class="notification-item notification-item-<%= messageType %>">
+    <%= message %>
+  </div>
+</script>
+
+<script type="text/template" id="audio-item-template">
+  <div class="song-item">
+    <div class="song-thumbnail"><a href="https://www.youtube.com/watch?v=<%= mediaId %>" target="_blank"><img src="<%= thumbnail %>"></a></div>
+    <div class="song-content">
+      <div class="song-audio-player">
+        <audio data-media-id="<%= mediaId %>" id="mediaId-<%= mediaId %>-player" controls preload="auto"></audio>
+      </div>
+      <div class="song-title"><%= title %></div>
+    </div>
+    <div class="song-info">
+      <span class="song-info-field">Duration:</span><%= duration %><br/>
+      <span class="song-info-field">Codec:</span><%= codec %><br/>
+      <span class="song-info-field">Size:</span><%= size %><br/>
+      <span class="song-info-field">Format:</span><br/>
+      <select class="song-format-select">
+        <% _.each(streams, function(i, j) { %>
+        <option value=<%= j %>><%= i.audioBitrate %>: <%= i.audioFormat %></option>
+        <% }) %>
+      </select><br />
+      <a href="<%= downLink %>" target="_blank">Download</a><br />
+      <a href="#" class="song-remove-link">Remove</a>
+    </div>
+  </div>
+</script>
+<!-- end templates -->
+</body>
+</html>
+

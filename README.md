@@ -1,7 +1,8 @@
 # corazon
 YouTube Music Player
 
-- To track sync API calls
---trace-sync-io 
-- To dump database
-mongodump --db corazone
+- Install extension in chrome
+- Open player page
+- Open youtube, and right click links to add
+
+So long...

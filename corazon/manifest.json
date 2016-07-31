@@ -1,0 +1,27 @@
+{
+  "manifest_version": 2,
+
+  "name": "Corazon",
+  "description": "Audio Player for YouTube",
+  "version": "0.9",
+  "icons": {
+    "16": "icon_16.png",
+    "32": "icon_32.png",
+    "128": "icon_128.png"
+  },
+
+  "browser_action": {
+    "default_icon": "icon_16.png",
+    "default_popup": "toolbar_popup.html"
+  },
+  "background": {
+    "persistent": false,
+    "scripts": ["backgroundEvents.js"]
+  },
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "http://corazonpxy.esy.es/"
+  ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+}
