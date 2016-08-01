@@ -2,3 +2,5 @@ Next:
 - play only range
 - save volume
 - order of items
+- multiple playlists
+- play recommended video next

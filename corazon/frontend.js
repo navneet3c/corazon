@@ -99,6 +99,7 @@ $(function(){
         loaded: 0,
         size: "--",
         codec: "--",
+        selectedStream: "--",
         downLink: "",
         order: 0,
         streams: [],
@@ -188,6 +189,12 @@ $(function(){
       nextPlayingItem = this.at(candidate) || this.at(0)
       this.trigger("play", {mediaId: nextPlayingItem.attributes.mediaId})
     },
+    startPlayback: function() {
+      if(!this.currentPlayingItem) {
+        this.currentPlayingItem = this.at(0)
+      }
+      this.trigger("play", {mediaId: this.currentPlayingItem.attributes.mediaId})
+    },
     stopPlayback: function() {
       $.notificationInterface.pushNotification({
         message: "Stopping all playback.",
@@ -221,12 +228,13 @@ $(function(){
       this.audioElement.onended = this.announceEnd
     },
     updateMediaSource: function(event) {
-      var idx = (event? event.target.value: 0)
+      var idx = (event? parseInt(event.target.value): 0)
       var stream = this.model.attributes.streams[idx]
       
       this.model.attributes.size = stream.fileSize
       this.model.attributes.codec = stream.audioCodecs
       this.model.attributes.downLink = stream.audioUrl
+      this.model.attributes.selectedStream = idx
       this.render()
       this.updateRenderDependencies()
       
@@ -258,12 +266,12 @@ $(function(){
       if(this.model.attributes.loaded) {
         if(this.audioElement.paused) {
           this.audioElement.play()
-          Songs.trigger('playing', this.model)
           $.notificationInterface.pushNotification({
             message: "Now playing: " + this.model.attributes.title,
             messageType: "good"
           })
         }
+        Songs.trigger('playing', this.model)
       } else {
         this.model.loadSongData()
       }
@@ -271,8 +279,8 @@ $(function(){
     stopPlayback: function(data) {
       this.audioElement.pause()
     },
-    removeSong: function() {
-      console.log("asd")
+    removeSong: function(event) {
+      event.preventDefault()
       this.model.destroy()
     },
     clear: function(data) {
@@ -305,7 +313,7 @@ $(function(){
     },
     startPlayback: function() {
       this.playingNow = 1
-      Songs.changeTrack()
+      Songs.startPlayback()
     },
     stopPlayback: function() {
       this.playingNow = -1

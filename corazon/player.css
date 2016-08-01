@@ -124,4 +124,5 @@ select{
 }
 .song-audio-player audio{
   width: 98%;
+  border: 1px solid #999;
 }

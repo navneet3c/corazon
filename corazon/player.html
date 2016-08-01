@@ -17,8 +17,6 @@
 
 <section id="main">
   <ul id="songs-list">
-    <li>
-    </li>
   </ul>
 </section>
 
@@ -42,7 +40,7 @@
     <div class="song-thumbnail"><a href="https://www.youtube.com/watch?v=<%= mediaId %>" target="_blank"><img src="<%= thumbnail %>"></a></div>
     <div class="song-content">
       <div class="song-audio-player">
-        <audio data-media-id="<%= mediaId %>" id="mediaId-<%= mediaId %>-player" controls preload="auto"></audio>
+        <audio data-media-id="<%= mediaId %>" id="mediaId-<%= mediaId %>-player" controls preload="metadata"></audio>
       </div>
       <div class="song-title"><%= title %></div>
     </div>
@@ -53,7 +51,7 @@
       <span class="song-info-field">Format:</span><br/>
       <select class="song-format-select">
         <% _.each(streams, function(i, j) { %>
-        <option value=<%= j %>><%= i.audioBitrate %>: <%= i.audioFormat %></option>
+        <option value=<%= j %> <%= ((j == selectedStream)? "selected": "") %>><%= i.audioBitrate %>: <%= i.audioFormat %></option>
         <% }) %>
       </select><br />
       <a href="<%= downLink %>" target="_blank">Download</a><br />
