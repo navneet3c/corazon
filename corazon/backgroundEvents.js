@@ -17,7 +17,7 @@ chrome.runtime.onInstalled.addListener(function() {
   //set default config variables
   chrome.storage.local.set({
     dummyVideoId: "aSVpBqOsC7o", //to be used for scraping base.js
-    resourceProxy: "http://corazonpxy.esy.es/proxy.php",
+    resourceProxy: "http://czonepxy.hol.es/proxy.php",
   })
 })
 
@@ -25,7 +25,7 @@ chrome.runtime.onInstalled.addListener(function() {
 function addToPlaylistHandler(info) {
   var videoUrlObj = document.createElement('a')
   videoUrlObj.href = info.linkUrl || info.pageUrl
-  var videoId = videoUrlObj.search.match(/\bv=(.+)\b/)
+  var videoId = videoUrlObj.search.match(/\bv=([a-zA-Z0-9-_]+)/)
   if(videoId.length != 2) {
     alert("Malformed URL: "+info.linkUrl+"\nCould not get Video ID.")
     return

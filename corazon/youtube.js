@@ -82,7 +82,10 @@ function processVideoResourceFileForLinks(config, obj, videoId) {
       try {
         //check if cipher is out of date
         if(obj[i].data.swfcfg.assets.js != config.baseJsResourceUrl) {
-          alert("Error [processVideoResourceFileForLinks]: Signature cipher is out of date. Please update.\n" + "Current: " + obj[i].data.swfcfg.assets.js + "\nSynced: " + config.baseJsResourceUrl)
+          console.log("[processVideoResourceFileForLinks]: Signature cipher is out of date. Updating...\n" + "Current: " + obj[i].data.swfcfg.assets.js + "\nSynced: " + config.baseJsResourceUrl)
+          refreshYouTubeCipher()
+          //window.setTimeout(updateNewVideoDataFromId(null, videoId, true), 1)
+          updateNewVideoDataFromId(videoId, true)
           return
         }
         urlSource = obj[i].data.swfcfg.args.adaptive_fmts
@@ -187,4 +190,151 @@ function processMediaFormats(config, blob) {
   }
   returnObject.audioUrl = mediaUrl
   return returnObject
+}
+
+//get configuration and initiate ajax request to get resource file
+function refreshYouTubeCipher() {
+  console.log("Getting configuration and initiating cipher regeneration sequence...")
+  chrome.storage.local.get(["dummyVideoId", "resourceProxy"], sendResourceFileRequest)
+}
+
+//launch ajax request to get resource file and get response
+function sendResourceFileRequest(config) {
+  console.log("Sending request to get dummy resource file...")
+  var xhr = new XMLHttpRequest()
+  var resourceUrl = config.resourceProxy + "?url=" + encodeURIComponent("https://www.youtube.com/watch?v=" + config.dummyVideoId + "&spf=navigate")
+  
+  xhr.open("GET", resourceUrl, true)
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+      if(xhr.status != 200) {
+        alert("Error [sendResourceFileRequest]: Request failed")
+        return
+      }
+      getBaseJsFile(config, JSON.parse(xhr.responseText))
+    }
+  }
+  xhr.send()
+}
+
+//process resource file got from ajax request, extract base.js URL and initate
+//ajax request to get it
+function getBaseJsFile(config, obj) {
+  console.log("Processing dummy resource to extract base.js path...")
+  var baseJSUrl
+  for (var i = 0, len = obj.length; i < len; i++) {
+    if(obj[i] && obj[i].hasOwnProperty('data') && obj[i].data.hasOwnProperty('swfcfg')) {
+      baseJSUrl = obj[i].data.swfcfg.assets.js
+      break
+    }
+  }
+  if(!validateURL("https://www.youtube.com" + baseJSUrl)) {
+    alert("Could not get valid base.js URL. Aborting.")
+    return
+  }
+  chrome.storage.local.set({
+    "baseJsResourceUrl": baseJSUrl,
+  })
+  baseJSUrl = "https://www.youtube.com" + baseJSUrl
+  console.log("URL for base.js found: " + baseJSUrl + " . Launching request...")
+  
+  var xhr = new XMLHttpRequest()
+  var resourceUrl = config.resourceProxy + "?url=" + encodeURIComponent(baseJSUrl)
+  xhr.open("GET", resourceUrl, true)
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+      if(xhr.status != 200) {
+        alert("Error [getBaseJsFile]: Request failed")
+        return
+      }
+      processBaseJsFileData(xhr.responseText)
+    }
+  }
+  xhr.send()  
+}
+
+function validateURL(testURL) {
+  return /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})).?)(?::\d{2,5})?(?:[/?#]\S*)?$/i.test(testURL)
+}
+
+//process base.js content, and extract cipher function
+function processBaseJsFileData(respData) {
+  console.log("Processing base.js to extract cipher")
+  
+  var attemptSucceeded = 0;
+  var foundData;
+  
+  //find pattern where signature calculation function is called: <>.sig||<>.s
+  var match = /([a-zA-Z0-9\$]+)\.sig\|\|([a-zA-Z0-9\$]+)\(\1\.s\)/.exec(respData)
+  if(!match || !(2 in match) || match[2].match(/^[a-zA-Z0-9\$]+$/) === null) {
+  } else {
+    foundData = match[2]
+    attemptSucceeded = 1;
+  }
+  if(!attemptSucceeded) {
+    match = /\.set\(\"signature\",([a-zA-Z0-9]+)\([a-zA-Z0-9]+.s\)/.exec(respData)
+    if(!match || !(1 in match) || match[1].match(/^[a-zA-Z0-9]+$/) === null) {
+    } else {
+      foundData = match[1]
+      attemptSucceeded = 1;
+    }
+  }
+  
+  if(attemptSucceeded) {
+    console.log("Found cipher calculator function: " + foundData)
+  } else {
+    alert("Error [processBaseJsFileData]: Could not find signature calculation pattern")
+    return
+  }
+  
+  //find definition for function traced above
+  var re = new RegExp('[^A-Za-z0-9\\$]' + foundData + '=(function\\([^)]+\\)\\{[^}]+\\})')
+  match = re.exec(respData)
+  var baseFunc = match[1]
+  if(!(1 in match)) {
+    alert("Error [processBaseJsFileData]: Could not find definition for signature calculation function")
+    return
+  }
+  console.log("Found signature calculation function definition:", baseFunc)
+  
+  //find defintions for cipher function subroutines
+  var signatureCipherFunctionRoutines
+  eval("var signatureCipherFunction = " + baseFunc)
+  try {
+    signatureCipherFunction("abcd1234ABCD")
+    alert("Error [processBaseJsFileData]: Did not fire exception for cipher subroutines. Something is wrong.")
+    return
+  } catch (e) {
+    if(e.constructor.name == "ReferenceError") {
+      var unknown = e.message.split(" ")[0]
+      var re = new RegExp('[^A-Za-z0-9\\$]' + unknown + '=\\{')
+      match = re.exec(respData)
+      if(!match) {
+        alert("Error [processBaseJsFileData]: Could not find definition for cipher function subroutines")
+        return
+      }
+      
+      //gather object definition
+      var startMatch=match.index
+      var foundBraces = 0, nestLevel=0, endMatch=startMatch, ch;
+      while(nestLevel || !foundBraces) {
+        ch = respData.charAt(endMatch)
+        endMatch++
+        if(ch == '{') {
+          foundBraces = 1
+          nestLevel ++
+        } else if(ch == '}') {
+          nestLevel --
+        }
+      }
+      signatureCipherFunctionRoutines = respData.substring(startMatch, endMatch)
+      
+      console.log("Found class definition for cipher subroutines: ", signatureCipherFunctionRoutines)
+    }
+  }
+  chrome.storage.local.set({
+    "signatureCipherFunction": baseFunc,
+    "signatureCipherFunctionRoutines": signatureCipherFunctionRoutines,
+  })
+  console.log("Updation succeeded")
 }
