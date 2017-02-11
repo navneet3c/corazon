@@ -84,8 +84,11 @@ function processVideoResourceFileForLinks(config, obj, videoId) {
         if(obj[i].data.swfcfg.assets.js != config.baseJsResourceUrl) {
           console.log("[processVideoResourceFileForLinks]: Signature cipher is out of date. Updating...\n" + "Current: " + obj[i].data.swfcfg.assets.js + "\nSynced: " + config.baseJsResourceUrl)
           refreshYouTubeCipher()
-          //window.setTimeout(updateNewVideoDataFromId(null, videoId, true), 1)
-          updateNewVideoDataFromId(videoId, true)
+          document.addEventListener("cipherGenerationDone", function(e) {
+            updateNewVideoDataFromId(videoId, true)
+            console.log(e)
+            e.srcElement.removeEventListener("cipherGenerationDone", arguments.callee)
+          }, true)
           return
         }
         urlSource = obj[i].data.swfcfg.args.adaptive_fmts
@@ -340,5 +343,7 @@ function processBaseJsFileData(respData) {
     "signatureCipherFunction": baseFunc,
     "signatureCipherFunctionRoutines": signatureCipherFunctionRoutines,
   })
+  var event = new Event('cipherGenerationDone')
+  document.dispatchEvent(event)
   console.log("Updation succeeded")
 }
