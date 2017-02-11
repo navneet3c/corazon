@@ -261,21 +261,24 @@ function validateURL(testURL) {
 function processBaseJsFileData(respData) {
   console.log("Processing base.js to extract cipher")
   
-  var attemptSucceeded = 0;
-  var foundData;
+  var attemptSucceeded = 0
+  var foundData, match
   
-  //find pattern where signature calculation function is called: <>.sig||<>.s
-  var match = /([a-zA-Z0-9\$]+)\.sig\|\|([a-zA-Z0-9\$]+)\(\1\.s\)/.exec(respData)
-  if(!match || !(2 in match) || match[2].match(/^[a-zA-Z0-9\$]+$/) === null) {
+  //find pattern where signature calculation function is called
+  
+  //pattern: .set("signature",<>(?.s))
+  match = /\.set\(\"signature\",([a-zA-Z0-9_\$]+)\([a-zA-Z0-9_\$]+.s\)\)/.exec(respData)
+  if(!match || !(1 in match) || match[1].match(/^[a-zA-Z0-9_\$]+$/) === null) {
   } else {
-    foundData = match[2]
+    foundData = match[1]
     attemptSucceeded = 1;
   }
   if(!attemptSucceeded) {
-    match = /\.set\(\"signature\",([a-zA-Z0-9]+)\([a-zA-Z0-9]+.s\)/.exec(respData)
-    if(!match || !(1 in match) || match[1].match(/^[a-zA-Z0-9]+$/) === null) {
+    //pattern: <>.sig||<>.s
+    match = /([a-zA-Z0-9_\$]+)\.sig\|\|([a-zA-Z0-9_\$]+)\(\1\.s\)/.exec(respData)
+    if(!match || !(2 in match) || match[2].match(/^[a-zA-Z0-9_\$]+$/) === null) {
     } else {
-      foundData = match[1]
+      foundData = match[2]
       attemptSucceeded = 1;
     }
   }
@@ -288,7 +291,7 @@ function processBaseJsFileData(respData) {
   }
   
   //find definition for function traced above
-  var re = new RegExp('[^A-Za-z0-9\\$]' + foundData + '=(function\\([^)]+\\)\\{[^}]+\\})')
+  var re = new RegExp('[^A-Za-z0-9_\\$]' + foundData + '=(function\\([^)]+\\)\\{[^}]+\\})')
   match = re.exec(respData)
   var baseFunc = match[1]
   if(!(1 in match)) {
@@ -307,7 +310,8 @@ function processBaseJsFileData(respData) {
   } catch (e) {
     if(e.constructor.name == "ReferenceError") {
       var unknown = e.message.split(" ")[0]
-      var re = new RegExp('[^A-Za-z0-9\\$]' + unknown + '=\\{')
+      unknown = unknown.replace("$", "\\$")
+      var re = new RegExp('[^A-Za-z0-9_\\$]' + unknown + '=\\{')
       match = re.exec(respData)
       if(!match) {
         alert("Error [processBaseJsFileData]: Could not find definition for cipher function subroutines")
