@@ -86,7 +86,6 @@ function processVideoResourceFileForLinks(config, obj, videoId) {
           refreshYouTubeCipher()
           document.addEventListener("cipherGenerationDone", function(e) {
             updateNewVideoDataFromId(videoId, true)
-            console.log(e)
             e.srcElement.removeEventListener("cipherGenerationDone", arguments.callee)
           }, true)
           return
@@ -285,6 +284,16 @@ function processBaseJsFileData(respData) {
       attemptSucceeded = 1;
     }
   }
+  if(!attemptSucceeded) {
+    //pattern: "signature":"sig"
+    match = /\"signature\"\:\"sig\"[^=]*=([a-zA-Z0-9_\$]+)/.exec(respData)
+    if(!match || !(1 in match) || match[1].match(/^[a-zA-Z0-9_\$]+$/) === null) {
+    } else {
+      foundData = match[1]
+      attemptSucceeded = 1;
+    }
+  }
+  
   
   if(attemptSucceeded) {
     console.log("Found cipher calculator function: " + foundData)
@@ -294,13 +303,14 @@ function processBaseJsFileData(respData) {
   }
   
   //find definition for function traced above
+  foundData = foundData.replace("$", "\\$")
   var re = new RegExp('[^A-Za-z0-9_\\$]' + foundData + '=(function\\([^)]+\\)\\{[^}]+\\})')
   match = re.exec(respData)
-  var baseFunc = match[1]
   if(!(1 in match)) {
     alert("Error [processBaseJsFileData]: Could not find definition for signature calculation function")
     return
   }
+  var baseFunc = match[1]
   console.log("Found signature calculation function definition:", baseFunc)
   
   //find defintions for cipher function subroutines
