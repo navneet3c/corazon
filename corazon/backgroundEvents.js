@@ -17,7 +17,7 @@ chrome.runtime.onInstalled.addListener(function() {
   //set default config variables
   chrome.storage.local.set({
     dummyVideoId: "aSVpBqOsC7o", //to be used for scraping base.js
-    resourceProxy: "http://czonepxy.hol.es/proxy.php",
+    resourceProxy: "http://corazon-yt.rf.gd/proxy.php",
   })
 })
 
@@ -49,11 +49,10 @@ function dispatchAudioStreamsToPlayerPage(msg) {
           return
         }
       })
-      sendStreamMessageToPlayer(config.playerLiveTabId, msg)
+      //sendStreamMessageToPlayer(config.playerLiveTabId, msg)
     } else {
       alert("Error: Please start Corazon player first.")
       return
     }
   })
 }
-
