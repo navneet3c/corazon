@@ -224,6 +224,7 @@ $(function(){
     },
     updateRenderDependencies: function() {
       this.audioElement = $("#mediaId-" + this.model.attributes.mediaId + "-player")[0]
+      this.audioElement.src = "https://sample-videos.com/audio/mp3/crowd-cheering.mp3"
       this.audioElement.onplay = this.launchPlayback
       this.audioElement.onended = this.announceEnd
     },
